@@ -1,19 +1,75 @@
 <!DOCTYPE html> 
 <html> 
-<head>     
+<head>
+    <meta charset="utf-8">
+    <title>AR Classroom</title>
+    <!-- Mobile-friendly meta tags -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    
+    <!-- Same A-Frame and AR.js libraries -->
     <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>     
-    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>     
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+    
+    <!-- Add loading and error handling -->
+    <style>
+        #loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: Arial, sans-serif;
+            z-index: 9999;
+        }
+        
+        #debug {
+            position: fixed;
+            bottom: 10px;
+            left: 10px;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 8px;
+            font-family: monospace;
+            font-size: 12px;
+            border-radius: 4px;
+            z-index: 100;
+        }
+        
+        #camera-button {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 12px 24px;
+            background-color: #4285F4;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            display: none;
+            z-index: 10000;
+        }
+    </style>
+    
     <!-- Add script to create multiple student desks -->     
     <script>         
         // This function will run after the scene loads         
         AFRAME.registerComponent('classroom', {             
-            init: function() {                 
+            init: function() {
+                // Update debug info
+                updateDebug("Creating classroom layout...");
+                
                 // Create student desks in rows                 
                 const rows = 3;                 
                 const desksPerRow = 3;                 
                 const startX = -1.5;                 
                 const startZ = 0.8;                 
-                // REDUCED SPACING between desks
                 const spacingX = 1.0;                 
                 const spacingZ = 1.0;                                  
                 const scene = document.querySelector('a-marker');                                  
@@ -25,65 +81,223 @@
                         const xPos = startX + (desk * spacingX);                         
                         const zPos = startZ + (row * spacingZ);                                                  
                         
-                        // Create and add the chair-table combination
-                        // FURTHER INCREASED SIZE of student desks                   
+                        // Create and add the chair-table combination                  
                         const studentDesk = document.createElement('a-entity');                         
-                        studentDesk.setAttribute('gltf-model', 'chair_table.glb');                         
+                        studentDesk.setAttribute('gltf-model', './chair_table.glb');                         
                         studentDesk.setAttribute('position', {x: xPos, y: 0, z: zPos});                         
                         studentDesk.setAttribute('rotation', {x: 0, y: 90, z: 0});                         
                         studentDesk.setAttribute('scale', {x: 0.4, y: 0.4, z: 0.4});                                                  
                         
                         scene.appendChild(studentDesk);                     
                     }                 
-                }             
+                }
+                
+                updateDebug("Classroom layout created. Waiting for marker...");           
             }         
-        });     
+        });
+        
+        // Function to log to the debug panel
+        function updateDebug(message) {
+            const debug = document.getElementById('debug');
+            if (debug) {
+                debug.textContent = message;
+                console.log(message);
+            }
+        }
+        
+        // Error tracking for model loading problems
+        AFRAME.registerComponent('model-error', {
+            init: function() {
+                const el = this.el;
+                el.addEventListener('model-error', function(e) {
+                    updateDebug(`Error loading model: ${e.detail.src}`);
+                });
+            }
+        });
     </script> 
 </head> 
-<body style='margin: 0; overflow: hidden;'>     
-    <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;">         
-        <a-marker preset="hiro" classroom>             
-            <!-- Floor - KEEPING THE SAME SIZE as requested -->             
+<body style='margin: 0; overflow: hidden;'>
+    <!-- Loading screen -->
+    <div id="loading-screen">
+        <div>
+            <h2>Loading AR Classroom...</h2>
+            <p>Please wait while models are loading.</p>
+        </div>
+    </div>
+    
+    <!-- Debug panel -->
+    <div id="debug">Initializing...</div>
+    
+    <!-- iOS camera permission button -->
+    <button id="camera-button">Enable Camera for AR</button>
+    
+    <!-- AR Scene -->
+    <a-scene 
+        embedded 
+        arjs="sourceType: webcam; debugUIEnabled: true; detectionMode: mono_and_matrix; matrixCodeType: 3x3;"
+        renderer="logarithmicDepthBuffer: true;"
+        vr-mode-ui="enabled: false"
+        device-orientation-permission-ui="enabled: false">
+        
+        <a-marker preset="hiro" classroom>
+            <!-- Floor -->             
             <a-entity                  
-                gltf-model="checkered_tile_floor.glb"                  
+                gltf-model="./checkered_tile_floor.glb"                  
                 position="0 -0.3 0.5"                  
                 rotation="0 0 0"                  
-                scale="0.1 0.5 0.1">             
-            </a-entity>                          
-            
-            <!-- Teacher's desk - FURTHER INCREASED SIZE -->             
-            <a-entity                  
-                gltf-model="teacher_desk.glb"                  
-                position="0 0 -1.5"                  
-                rotation="0 360 0"                  
-                scale="0.8 0.8 0.75">             
-            </a-entity>                          
-            
-            <!-- Teacher's chair - FURTHER INCREASED SIZE -->             
-            <a-entity                  
-                gltf-model="teacher-chair.glb"                  
-                position="0 0.15 -2.2"                  
-                rotation="0 0 0"                  
-                scale="1.5 1.5 1.5">             
-            </a-entity>                          
-            
-            <!-- Mini cupboard - INCREASED SIZE AND MOVED BACK to align with whiteboard -->             
-            <a-entity                  
-                gltf-model="mini-cupboard.glb"                  
-                position="2 0 -3.5"                  
-                rotation="0 90 0"                  
-                scale="0.25 0.25 0.25">             
+                scale="0.1 0.5 0.1"
+                model-error>             
             </a-entity>
             
-            <!-- Whiteboard - INCREASED SIZE -->
+            <!-- Backup floor in case model doesn't load -->
+            <a-plane
+                position="0 -0.3 0.5"
+                rotation="-90 0 0"
+                width="4"
+                height="4"
+                color="#808080"
+                visible="false"
+                id="backup-floor">
+            </a-plane>
+            
+            <!-- Teacher's desk -->             
+            <a-entity                  
+                gltf-model="./teacher_desk.glb"                  
+                position="0 0 -1.5"                  
+                rotation="0 360 0"                  
+                scale="0.8 0.8 0.75"
+                model-error>             
+            </a-entity>                          
+            
+            <!-- Teacher's chair -->             
+            <a-entity                  
+                gltf-model="./teacher-chair.glb"                  
+                position="0 0.15 -2.2"                  
+                rotation="0 0 0"                  
+                scale="1.5 1.5 1.5"
+                model-error>             
+            </a-entity>                          
+            
+            <!-- Mini cupboard -->             
+            <a-entity                  
+                gltf-model="./mini-cupboard.glb"                  
+                position="2 0 -3.5"                  
+                rotation="0 90 0"                  
+                scale="0.25 0.25 0.25"
+                model-error>             
+            </a-entity>
+            
+            <!-- Whiteboard -->
             <a-entity
-                gltf-model="whiteboard.glb"
+                gltf-model="./whiteboard.glb"
                 position="0 0.5 -3.5"
                 rotation="0 90 0"
-                scale="0.13 0.13 0.13">
-            </a-entity>         
-        </a-marker>         
+                scale="0.13 0.13 0.13"
+                model-error>
+            </a-entity>
+            
+            <!-- Backup primitive shapes if models fail to load -->
+            <a-box 
+                position="0 0 -1.5" 
+                width="1.5" 
+                height="0.5" 
+                depth="0.8" 
+                color="#8B4513"
+                visible="false"
+                id="backup-desk">
+            </a-box>
+            
+            <a-box 
+                position="0 0.5 -3.5" 
+                width="2" 
+                height="1.2" 
+                depth="0.1" 
+                color="white"
+                visible="false"
+                id="backup-whiteboard">
+            </a-box>
+        </a-marker>
+        
         <a-entity camera></a-entity>     
-    </a-scene> 
+    </a-scene>
+    
+    <script>
+        // Elements
+        const loadingScreen = document.getElementById('loading-screen');
+        const cameraButton = document.getElementById('camera-button');
+        
+        // Check if we're on iOS
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        
+        // iOS needs explicit camera permission handling
+        if (isIOS) {
+            loadingScreen.style.display = 'none';
+            cameraButton.style.display = 'block';
+            
+            cameraButton.addEventListener('click', function() {
+                // Request camera permission explicitly
+                navigator.mediaDevices.getUserMedia({ video: true })
+                    .then(function(stream) {
+                        updateDebug("Camera permission granted!");
+                        cameraButton.style.display = 'none';
+                        // Stop the stream as AR.js will request it again
+                        stream.getTracks().forEach(track => track.stop());
+                    })
+                    .catch(function(err) {
+                        updateDebug("Camera error: " + err.message);
+                        cameraButton.innerHTML = 'Camera access denied - check settings';
+                        cameraButton.style.backgroundColor = 'red';
+                    });
+            });
+        }
+        
+        // Scene loaded event
+        document.querySelector('a-scene').addEventListener('loaded', function () {
+            updateDebug("AR scene loaded. Waiting for marker...");
+            
+            // Hide loading screen on non-iOS
+            if (!isIOS) {
+                loadingScreen.style.display = 'none';
+            }
+            
+            // Fallback to show backup models if the real models don't load
+            setTimeout(function() {
+                // Check if models loaded by looking at their object3D children
+                const floorModel = document.querySelector('[gltf-model="./checkered_tile_floor.glb"]').object3D;
+                const whiteboardModel = document.querySelector('[gltf-model="./whiteboard.glb"]').object3D;
+                const deskModel = document.querySelector('[gltf-model="./teacher_desk.glb"]').object3D;
+                
+                // Show backups if models didn't load
+                if (!floorModel.children.length) {
+                    document.getElementById('backup-floor').setAttribute('visible', 'true');
+                    updateDebug("Using backup floor");
+                }
+                
+                if (!whiteboardModel.children.length) {
+                    document.getElementById('backup-whiteboard').setAttribute('visible', 'true');
+                    updateDebug("Using backup whiteboard");
+                }
+                
+                if (!deskModel.children.length) {
+                    document.getElementById('backup-desk').setAttribute('visible', 'true');
+                    updateDebug("Using backup desk");
+                }
+            }, 5000);
+        });
+        
+        // Marker detection events
+        document.querySelector('a-marker').addEventListener('markerFound', function() {
+            updateDebug("Marker found! Displaying classroom.");
+        });
+        
+        document.querySelector('a-marker').addEventListener('markerLost', function() {
+            updateDebug("Marker lost. Show the HIRO marker to camera.");
+        });
+        
+        // General error handler
+        window.addEventListener('error', function(e) {
+            updateDebug("Error: " + e.message);
+        });
+    </script>
 </body> 
 </html>
