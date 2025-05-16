@@ -1,170 +1,89 @@
 <!DOCTYPE html> 
 <html> 
-<head>
-    <meta charset="utf-8">
-    <title>Ultra-Compact AR Classroom</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    
+<head>     
     <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>     
-    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
-    
-    <style>
-        #loading-screen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.8);
-            color: white;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-family: Arial, sans-serif;
-            z-index: 9999;
-        }
-        
-        #info {
-            position: fixed;
-            bottom: 10px;
-            left: 10px;
-            background-color: rgba(0, 0, 0, 0.7);
-            color: white;
-            padding: 8px;
-            font-family: monospace;
-            font-size: 12px;
-            border-radius: 4px;
-            z-index: 100;
-        }
-    </style>
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>     
+    <!-- Add script to create multiple student desks -->     
+    <script>         
+        // This function will run after the scene loads         
+        AFRAME.registerComponent('classroom', {             
+            init: function() {                 
+                // Create student desks in rows                 
+                const rows = 3;                 
+                const desksPerRow = 3;                 
+                const startX = -1.5;                 
+                const startZ = 0.8;                 
+                // REDUCED SPACING between desks
+                const spacingX = 1.0;                 
+                const spacingZ = 1.0;                                  
+                const scene = document.querySelector('a-marker');                                  
+                
+                // Create rows of desks                 
+                for (let row = 0; row < rows; row++) {                     
+                    for (let desk = 0; desk < desksPerRow; desk++) {                         
+                        // Calculate position                         
+                        const xPos = startX + (desk * spacingX);                         
+                        const zPos = startZ + (row * spacingZ);                                                  
+                        
+                        // Create and add the chair-table combination
+                        // FURTHER INCREASED SIZE of student desks                   
+                        const studentDesk = document.createElement('a-entity');                         
+                        studentDesk.setAttribute('gltf-model', 'chair_table.glb');                         
+                        studentDesk.setAttribute('position', {x: xPos, y: 0, z: zPos});                         
+                        studentDesk.setAttribute('rotation', {x: 0, y: 90, z: 0});                         
+                        studentDesk.setAttribute('scale', {x: 0.4, y: 0.4, z: 0.4});                                                  
+                        
+                        scene.appendChild(studentDesk);                     
+                    }                 
+                }             
+            }         
+        });     
+    </script> 
 </head> 
-<body style='margin: 0; overflow: hidden;'>
-    <div id="loading-screen">
-        <div>Loading AR Classroom...</div>
-    </div>
-    
-    <div id="info">Initializing...</div>
-    
-    <!-- ULTRA-COMPACT CLASSROOM SCENE -->
+<body style='margin: 0; overflow: hidden;'>     
     <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;">         
-        <a-marker preset="hiro">
-            <!-- DRASTICALLY REDUCED FLOOR SIZE -->             
-            <a-plane 
-                position="0 -0.1 0" 
-                rotation="-90 0 0" 
-                width="1.2" 
-                height="1.2" 
-                color="#d3d3d3" 
-                material="src: ./checkered_tile_floor.glb; repeat: 5 5">
-            </a-plane>
+        <a-marker preset="hiro" classroom>             
+            <!-- Floor - KEEPING THE SAME SIZE as requested -->             
+            <a-entity                  
+                gltf-model="checkered_tile_floor.glb"                  
+                position="0 -0.3 0.5"                  
+                rotation="0 0 0"                  
+                scale="0.1 0.5 0.1">             
+            </a-entity>                          
             
-            <!-- ALL OBJECTS GROUPED IN A MINIATURE LAYOUT -->
-            <a-entity position="0 0 0" scale="0.5 0.5 0.5">
-                <!-- Teacher area - front section -->
-                <a-entity position="0 0 -0.4">
-                    <!-- Super-compact whiteboard -->
-                    <a-box 
-                        position="0 0.3 -0.2" 
-                        width="0.8" 
-                        height="0.4" 
-                        depth="0.02" 
-                        color="white">
-                    </a-box>
-                    
-                    <!-- Teacher desk -->
-                    <a-box 
-                        position="0 0.1 0" 
-                        width="0.6" 
-                        height="0.2" 
-                        depth="0.3" 
-                        color="#8B4513">
-                    </a-box>
-                    
-                    <!-- Teacher chair -->
-                    <a-entity position="0 0 0.2">
-                        <a-box 
-                            position="0 0.05 0" 
-                            width="0.2" 
-                            height="0.1" 
-                            depth="0.2" 
-                            color="#000080">
-                        </a-box>
-                        <a-box 
-                            position="0 0.2 -0.08" 
-                            width="0.2" 
-                            height="0.2" 
-                            depth="0.04" 
-                            color="#000080">
-                        </a-box>
-                    </a-entity>
-                </a-entity>
-                
-                <!-- Student desks in a very tight arrangement -->
-                <a-entity position="0 0 0.3">
-                    <!-- 2x2 grid of desks -->
-                    <!-- Row 1 -->
-                    <a-entity position="-0.25 0 0">
-                        <a-box position="0 0.05 0" width="0.2" height="0.1" depth="0.15" color="#A0522D"></a-box>
-                        <a-box position="0 0 0.1" width="0.1" height="0.1" depth="0.05" color="#4169E1"></a-box>
-                    </a-entity>
-                    
-                    <a-entity position="0.25 0 0">
-                        <a-box position="0 0.05 0" width="0.2" height="0.1" depth="0.15" color="#A0522D"></a-box>
-                        <a-box position="0 0 0.1" width="0.1" height="0.1" depth="0.05" color="#4169E1"></a-box>
-                    </a-entity>
-                    
-                    <!-- Row 2 -->
-                    <a-entity position="-0.25 0 0.25">
-                        <a-box position="0 0.05 0" width="0.2" height="0.1" depth="0.15" color="#A0522D"></a-box>
-                        <a-box position="0 0 0.1" width="0.1" height="0.1" depth="0.05" color="#4169E1"></a-box>
-                    </a-entity>
-                    
-                    <a-entity position="0.25 0 0.25">
-                        <a-box position="0 0.05 0" width="0.2" height="0.1" depth="0.15" color="#A0522D"></a-box>
-                        <a-box position="0 0 0.1" width="0.1" height="0.1" depth="0.05" color="#4169E1"></a-box>
-                    </a-entity>
-                </a-entity>
-                
-                <!-- Cupboard on side -->
-                <a-entity position="0.4 0.2 -0.3">
-                    <a-box 
-                        width="0.2" 
-                        height="0.4" 
-                        depth="0.2" 
-                        color="#8B4513">
-                    </a-box>
-                </a-entity>
+            <!-- Teacher's desk - FURTHER INCREASED SIZE -->             
+            <a-entity                  
+                gltf-model="teacher_desk.glb"                  
+                position="0 0 -1.5"                  
+                rotation="0 360 0"                  
+                scale="0.8 0.8 0.75">             
+            </a-entity>                          
+            
+            <!-- Teacher's chair - FURTHER INCREASED SIZE -->             
+            <a-entity                  
+                gltf-model="teacher-chair.glb"                  
+                position="0 0.15 -2.2"                  
+                rotation="0 0 0"                  
+                scale="1.5 1.5 1.5">             
+            </a-entity>                          
+            
+            <!-- Mini cupboard - INCREASED SIZE AND MOVED BACK to align with whiteboard -->             
+            <a-entity                  
+                gltf-model="mini-cupboard.glb"                  
+                position="2 0 -3.5"                  
+                rotation="0 90 0"                  
+                scale="0.25 0.25 0.25">             
             </a-entity>
+            
+            <!-- Whiteboard - INCREASED SIZE -->
+            <a-entity
+                gltf-model="whiteboard.glb"
+                position="0 0.5 -3.5"
+                rotation="0 90 0"
+                scale="0.13 0.13 0.13">
+            </a-entity>         
         </a-marker>         
-        
         <a-entity camera></a-entity>     
     </a-scene> 
-    
-    <script>
-        const loadingScreen = document.getElementById('loading-screen');
-        const info = document.getElementById('info');
-        
-        // Scene loaded event
-        document.querySelector('a-scene').addEventListener('loaded', function () {
-            info.textContent = "Show the HIRO marker to view classroom";
-            loadingScreen.style.display = 'none';
-        });
-        
-        // Marker detection events
-        document.querySelector('a-marker').addEventListener('markerFound', function() {
-            info.textContent = "360° view classroom - all visible at once";
-            
-            // Hide info after 5 seconds
-            setTimeout(() => {
-                info.style.display = 'none';
-            }, 5000);
-        });
-        
-        document.querySelector('a-marker').addEventListener('markerLost', function() {
-            info.style.display = 'block';
-            info.textContent = "Marker lost. Show the HIRO marker again.";
-        });
-    </script>
 </body> 
 </html>
